@@ -31,8 +31,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.BitSet;
 
-//import be.brunoparmentier.wifikeyshare.BuildConfig;
-//import be.brunoparmentier.wifikeyshare.model.WifiNetwork;
+// source: https://github.com/bparmentier/WiFiKeyShare
 
 /**
  * Utility class containing functions to read/write NFC tags with Wi-Fi configurations

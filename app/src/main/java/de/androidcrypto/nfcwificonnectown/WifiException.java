@@ -25,6 +25,8 @@ public class WifiException extends Exception {
 
     private int errorCode;
 
+    // source: https://github.com/bparmentier/WiFiKeyShare
+
     public WifiException(int errorCode) {
         this.errorCode = errorCode;
     }

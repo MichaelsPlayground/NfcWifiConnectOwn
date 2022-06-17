@@ -1,55 +1,41 @@
 package de.androidcrypto.nfcwificonnectown;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
-import android.nfc.FormatException;
-import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
-import android.nfc.TagLostException;
-import android.nfc.tech.Ndef;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.Button;
-import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
-import java.io.IOException;
-
 public class MainActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
 
-    //Button readNfc, readNfcSsaurel;
-    com.google.android.material.textfield.TextInputLayout inputField1Decoration, inputField2Decoration, inputField3Decoration, inputField4Decoration;
-    com.google.android.material.textfield.TextInputEditText typeDescription, inputField1, inputField2, inputField3, inputField4, resultNfcWriting;
+    com.google.android.material.textfield.TextInputLayout inputField3Decoration, inputField4Decoration;
+   com.google.android.material.textfield.TextInputEditText typeDescription, inputField3, inputField4, resultNfcWriting;
     SwitchMaterial addTimestampToData;
     AutoCompleteTextView autoCompleteTextView;
 
-    Intent readNfcIntent;
     private NfcAdapter mNfcAdapter;
     boolean writeSuccess = false;
+
+    WifiAuthType wifiAuthType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //readNfc = findViewById(R.id.btnMainReadNfcNdefTag);
-        //readNfcSsaurel = findViewById(R.id.btnMainSsaurelReadNfcNdefTag);
-        //readNfcIntent = new Intent(MainActivity.this, ReadNdefActivity.class);
-
         typeDescription = findViewById(R.id.etMainTypeDescription);
-        inputField1 = findViewById(R.id.etMainInputline1);
-        inputField1Decoration = findViewById(R.id.etMainInputline1Decoration);
-        inputField2 = findViewById(R.id.etMainInputline2);
-        inputField2Decoration = findViewById(R.id.etMainInputline2Decoration);
+
         inputField3 = findViewById(R.id.etMainInputline3);
         inputField3Decoration = findViewById(R.id.etMainInputline3Decoration);
         inputField4 = findViewById(R.id.etMainInputline4);
@@ -57,20 +43,55 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         resultNfcWriting = findViewById(R.id.etMainResult);
         addTimestampToData = findViewById(R.id.swMainAddTimestampSwitch);
 
+        String[] type = new String[]{
+                "OPEN", "WEP", "WPA PSK", "WPA2 PSK"};
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
+                this,
+                R.layout.drop_down_item,
+                type);
+
+        autoCompleteTextView = findViewById(R.id.auth_type);
+        autoCompleteTextView.setAdapter(arrayAdapter);
+        autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String choiceString = autoCompleteTextView.getText().toString();
+                switch (choiceString) {
+                    case "OPEN": {
+                        wifiAuthType = WifiAuthType.OPEN;
+                        break;
+                    }
+                    case "WEP": {
+                        wifiAuthType = WifiAuthType.WEP;
+                        break;
+                    }
+                    case "WPA PSK": {
+                        wifiAuthType = WifiAuthType.WPA_PSK;
+                        break;
+                    }
+                    case "WPA2 PSK": {
+                        wifiAuthType = WifiAuthType.WPA2_PSK;
+                        break;
+                    }
+                    default: {
+                        wifiAuthType = null;
+                        break;
+                    }
+                }
+            }
+        });
+
         initUi();
 
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
     }
 
     private void initUi() {
-        inputField1Decoration.setHint("Wifi key (OPEN, WPA, WPA2");
-        inputField1.setText("WPA2");
-        inputField2Decoration.setHint("Encryption (NONE, WEP, TKIP, AES, AES/TKIP)");
-        inputField2.setText("AES/TKIP");
+        typeDescription.setText("This app writes a tag with connection parameters to a WIFI network.");
         inputField3Decoration.setHint("SSID");
-        inputField3.setText("Kiddy_Net");
+        inputField3.setText("WifiGuest");
         inputField4Decoration.setHint("Password");
-        inputField4.setText("Leon_2018");
+        inputField4.setText("87654321");
 
     }
 
@@ -112,6 +133,25 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         // Read and or write to Tag here to the appropriate Tag Technology type class
         // in this example the card should be an Ndef Technology Type
 
+        // simple sanity checks
+        if (wifiAuthType == null) {
+            runOnUiThread(() -> {
+                resultNfcWriting.setText("Choose an auth type");
+            });
+        }
+        String ssid = inputField3.getText().toString();
+        String password = inputField4.getText().toString();
+        if (ssid.isEmpty()) {
+            runOnUiThread(() -> {
+                resultNfcWriting.setText("enter a SSID");
+            });
+        }
+        if (password.isEmpty()) {
+            runOnUiThread(() -> {
+                resultNfcWriting.setText("enter a password");
+            });
+        }
+
         // Make a Sound
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(150,10));
@@ -120,8 +160,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             v.vibrate(200);
         }
 
-        WifiAuthType wifiAuthType;
-        wifiAuthType = WifiAuthType.WPA2_PSK;
+        //wifiAuthType = WifiAuthType.WPA2_PSK;
         WifiNetwork wifiNetwork = new WifiNetwork(inputField3.getText().toString(),
                 wifiAuthType, inputField4.getText().toString(), false);
         writeSuccess = NfcUtils.writeTag(wifiNetwork, tag);
@@ -133,87 +172,6 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                 resultNfcWriting.setText("*** ERROR *** on writing the tag");
             }
         });
-
-
- /*
-        Ndef mNdef = Ndef.get(tag);
-
-        // Check that it is an Ndef capable card
-        if (mNdef != null) {
-            NdefMessage ndefMessage = null;
-            NdefRecord ndefRecord1;
-            // nfc ndef writing depends on the type
-            String choiceString = autoCompleteTextView.getText().toString();
-            String inputData1 = inputField1.getText().toString();
-            boolean addTimestamp = addTimestampToData.isChecked();
-
-
-
-            // the tag is written here
-            try {
-                mNdef.connect();
-                mNdef.writeNdefMessage(ndefMessage);
-                // Success if got to here
-                runOnUiThread(() -> {
-                    resultNfcWriting.setText("write to NFC success");
-                    Toast.makeText(getApplicationContext(),
-                            "write to NFC success",
-                            Toast.LENGTH_SHORT).show();
-                });
-            } catch (FormatException e) {
-                runOnUiThread(() -> {
-                    resultNfcWriting.setText("failure FormatException: " + e);
-                    Toast.makeText(getApplicationContext(),
-                            "FormatException: " + e,
-                            Toast.LENGTH_SHORT).show();
-                });
-                // if the NDEF Message to write is malformed
-            } catch (TagLostException e) {
-                runOnUiThread(() -> {
-                    resultNfcWriting.setText("failure TagLostException: " + e);
-                    Toast.makeText(getApplicationContext(),
-                            "TagLostException: " + e,
-                            Toast.LENGTH_SHORT).show();
-                });
-                // Tag went out of range before operations were complete
-            } catch (IOException e) {
-                // if there is an I/O failure, or the operation is cancelled
-                runOnUiThread(() -> {
-                    resultNfcWriting.setText("failure IOException: " + e);
-                    Toast.makeText(getApplicationContext(),
-                            "IOException: " + e,
-                            Toast.LENGTH_SHORT).show();
-                });
-            } finally {
-                // Be nice and try and close the tag to
-                // Disable I/O operations to the tag from this TagTechnology object, and release resources.
-                try {
-                    mNdef.close();
-                } catch (IOException e) {
-                    // if there is an I/O failure, or the operation is cancelled
-                    runOnUiThread(() -> {
-                        resultNfcWriting.setText("failure IOException: " + e);
-                        Toast.makeText(getApplicationContext(),
-                                "IOException: " + e,
-                                Toast.LENGTH_SHORT).show();
-                    });
-                }
-            }
-
-            // Make a Sound
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                ((Vibrator) getSystemService(VIBRATOR_SERVICE)).vibrate(VibrationEffect.createOneShot(150,10));
-            } else {
-                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                v.vibrate(200);
-            }
-        } else {
-            runOnUiThread(() -> {
-                Toast.makeText(getApplicationContext(),
-                        "mNdef is null",
-                        Toast.LENGTH_SHORT).show();
-            });
-        }*/
     }
 
 }

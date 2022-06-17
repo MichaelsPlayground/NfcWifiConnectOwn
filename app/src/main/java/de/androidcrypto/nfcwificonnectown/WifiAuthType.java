@@ -26,6 +26,8 @@ public enum WifiAuthType {
     WPA2_EAP("WPA2 EAP"),
     WPA2_PSK("WPA2 PSK");
 
+    // source: https://github.com/bparmentier/WiFiKeyShare
+
     private final String printableName;
 
     WifiAuthType(String printableName) {

@@ -36,6 +36,8 @@ public class WifiNetwork implements Serializable {
         this.isHidden = isHidden;
     }
 
+    // source: https://github.com/bparmentier/WiFiKeyShare
+
     public String getSsid() {
         return ssid;
     }
