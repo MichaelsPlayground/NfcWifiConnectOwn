@@ -6,7 +6,7 @@ https://github.com/bparmentier/WiFiKeyShare
 
 by Bruno Parmentier
 
-The app is running on SDK 21 - 32 and is tested on Android devices running Android 9 and 12.
+The app is running on SDK 21 - 32 and is tested on Android devices running Android 5.01, 9 and 12.
 
 WLAN test-tag:
 ```plaintext
