@@ -5,5 +5,4 @@
     android:padding="16dp"
     android:maxLines="1"
     android:ellipsize="end"
-    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1">
-</TextView>
+    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"></TextView>

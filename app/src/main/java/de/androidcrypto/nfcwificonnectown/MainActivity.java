@@ -1,7 +1,8 @@
 package de.androidcrypto.nfcwificonnectown;
 
 import android.content.Context;
-import android.content.Intent;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Build;
@@ -15,13 +16,10 @@ import android.widget.AutoCompleteTextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.material.switchmaterial.SwitchMaterial;
-
 public class MainActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
 
     com.google.android.material.textfield.TextInputLayout inputField3Decoration, inputField4Decoration;
-   com.google.android.material.textfield.TextInputEditText typeDescription, inputField3, inputField4, resultNfcWriting;
-    SwitchMaterial addTimestampToData;
+    com.google.android.material.textfield.TextInputEditText typeDescription, inputFieldSsid, inputFieldPassword, resultNfcWriting;
     AutoCompleteTextView autoCompleteTextView;
 
     private NfcAdapter mNfcAdapter;
@@ -35,13 +33,11 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         setContentView(R.layout.activity_main);
 
         typeDescription = findViewById(R.id.etMainTypeDescription);
-
-        inputField3 = findViewById(R.id.etMainInputline3);
+        inputFieldSsid = findViewById(R.id.etMainInputlineSsid);
         inputField3Decoration = findViewById(R.id.etMainInputline3Decoration);
-        inputField4 = findViewById(R.id.etMainInputline4);
+        inputFieldPassword = findViewById(R.id.etMainInputlinePassword);
         inputField4Decoration = findViewById(R.id.etMainInputline4Decoration);
         resultNfcWriting = findViewById(R.id.etMainResult);
-        addTimestampToData = findViewById(R.id.swMainAddTimestampSwitch);
 
         String[] type = new String[]{
                 "OPEN", "WEP", "WPA PSK", "WPA2 PSK"};
@@ -82,17 +78,15 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         });
 
         initUi();
-
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
     }
 
     private void initUi() {
         typeDescription.setText("This app writes a tag with connection parameters to a WIFI network.");
         inputField3Decoration.setHint("SSID");
-        inputField3.setText("WifiGuest");
+        inputFieldSsid.setText("WifiGuest");
         inputField4Decoration.setHint("Password");
-        inputField4.setText("87654321");
-
+        inputFieldPassword.setText("87654321");
     }
 
     @Override
@@ -138,18 +132,27 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             runOnUiThread(() -> {
                 resultNfcWriting.setText("Choose an auth type");
             });
+            ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 120);
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_NACK);
+            return;
         }
-        String ssid = inputField3.getText().toString();
-        String password = inputField4.getText().toString();
+        String ssid = inputFieldSsid.getText().toString();
+        String password = inputFieldPassword.getText().toString();
         if (ssid.isEmpty()) {
             runOnUiThread(() -> {
                 resultNfcWriting.setText("enter a SSID");
             });
+            ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 120);
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_NACK);
+            return;
         }
         if (password.isEmpty()) {
             runOnUiThread(() -> {
                 resultNfcWriting.setText("enter a password");
             });
+            ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 120);
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_NACK);
+            return;
         }
 
         // Make a Sound
@@ -160,9 +163,8 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             v.vibrate(200);
         }
 
-        //wifiAuthType = WifiAuthType.WPA2_PSK;
-        WifiNetwork wifiNetwork = new WifiNetwork(inputField3.getText().toString(),
-                wifiAuthType, inputField4.getText().toString(), false);
+        WifiNetwork wifiNetwork = new WifiNetwork(inputFieldSsid.getText().toString(),
+                wifiAuthType, inputFieldPassword.getText().toString(), false);
         writeSuccess = NfcUtils.writeTag(wifiNetwork, tag);
         runOnUiThread(() -> {
             if (writeSuccess) {
